@@ -7,31 +7,52 @@
     let todoState = [];
     let oldTodoState = [];
 
-    function addTodoToDom() {
-      
+    function addTodoToDom(todo){
+      const element  = document.getElementById("todos");
+      const newEle = document.createElement('div');
+      newEle.setAttribute('data-id',todo.id);
+      newEle.innerHTML = `ID: ${todo.id}, Title: ${todo.title}, Description: ${todo.description}<button onclick="deleteTodo(${todo.id})">Delete todo</button><button onclick="editTodo(${todo.id})">Edit todo</button>`;
+      element.appendChild(newEle);
     }
 
     function removeTodoFromDom(todo) {
-      
+      console.log("first",todo)
+      const todosContainer = document.getElementById("todos");
+      const todoElement = todosContainer.querySelector(`div[data-id="${todo.id}"]`);
+      console.log(todoElement);
+      if(todoElement){
+        todosContainer.removeChild(todoElement)
+      }
     }
 
     function updateTodoInDom(oldTodo, newTodo) {
-        
+        const todoContainer = document.getElementById('todos');
+        const todoElement = todoContainer.querySelector(`div[data-id="${oldTodo.id}"]`);
+        if(todoElement){
+          todoElement.innerHTML = `<div>ID: ${newTodo.id}, Title: ${newTodo.title}, Description: ${newTodo.description}</div><button onclick="deleteTodo(${newTodo.id})">Delete todo</button><button onclick="editTodo(${newTodo.id})">Edit todo</button>`;
+        }
     }
 
     function updateState(newTodos) {
-      // calculate the diff b/w newTodos and oldTodos.
-      // More specifically, find out what todos are - 
-      // 1. added
-      // 2. deleted
-      // 3. updated
-      const added = [];
-      const deleted = [];
-      const updated = [];
-      // calculate these 3 arrays
-      // call addTodo, removeTodo, updateTodo functions on each of the
-      // elements
-      oldTodoState = newTodos;
+      console.log(newTodos)
+      console.log(oldTodoState);
+      const added = newTodos.filter((newTodo) => !oldTodoState.some((oldTodo) => oldTodo.id === newTodo.id));
+      const deleted = oldTodoState.filter((oldTodo) => !newTodos.some((newTodo) => newTodo.id === oldTodo.id));
+      const updated = newTodos.filter((newTodo) => {
+        const oldTodo = oldTodoState.find((old) => old.id === newTodo.id);
+        return oldTodo && (oldTodo.title !== newTodo.title || oldTodo.description !== newTodo.description);
+      });
+      added.forEach(ele=> {
+        addTodoToDom(ele);
+      });
+      deleted.forEach(ele=> {
+        removeTodoFromDom(ele);
+      });
+      updated.forEach(ele=> {
+        const old = oldTodoState.find(todo=>todo.id===ele.id);
+        updateTodoInDom(old,ele);
+      });
+      oldTodoState = [...newTodos];
     }
 
     function addTodo() {
@@ -43,6 +64,32 @@
         id: globalId++,
       })
       updateState(todoState);
+    }
+    function deleteTodo(delId){
+      todoState = todoState.filter(todo=>todo.id!==delId);
+      updateState(todoState);
+    }
+    function editTodo(editId) {
+      const title = document.getElementById("title").value;
+      const description = document.getElementById("description").value;
+
+      // Check if title and description are not empty before updating
+      if (title.trim() !== "" && description.trim() !== "") {
+        todoState = todoState.map((todo) => {
+          if (todo.id !== editId) return todo;
+          else {
+            return {
+              ...todo,
+              title: title,
+              description: description,
+            };
+          }
+        });
+        console.log(todoState);
+        updateState(todoState);
+      } else {
+        console.log("Title and description cannot be empty");
+      }
     }
   </script>
 </head>
